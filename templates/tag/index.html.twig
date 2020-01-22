@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}#{{ tag }}{% endblock %}
+
+{% block body %}
+    <h2>{% trans with {'%tag%': tag} %}#%tag%{% endtrans %}</h2>
+    <ul class="list-unstyled mt-2">
+        {% for match in matches %}
+            <li class="py-2 border-bottom border-opacity-25 d-flex align-items-center gap-2">
+                <span class="article-type-{{ match.entity }}"></span>
+                <time class="text-muted small text-nowrap" datetime="{{ match.pubdate|date('c') }}" data-format="date">{{ match.pubdate|format_datetime('short', 'none') }}</time>
+                <a class="fw-semibold" href="{{ path(match.entity == 'reader' ? 'reader_show' : 'blog_show', {slug: match.slug}) }}">{{ match.title }}</a>
+            </li>
+        {% else %}
+            <li class="py-3 text-muted">{% trans %}No posts yet.{% endtrans %}</li>
+        {% endfor %}
+    </ul>
+    {% if pager.haveToPaginate %}
+    <nav aria-label="page" class="mt-3">
+        {{ pagerfanta(pager, {'omitFirstPage': true}) }}
+    </nav>
+    {% endif %}
+{% endblock %}

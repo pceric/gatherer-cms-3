@@ -1,0 +1,96 @@
+parameters:
+  app.config_schema:
+    meta:
+      label: Site Metadata
+      fields:
+        - author:
+            label: Site Author
+            type: TextType
+        - desc:
+            label: Site Description
+            type: TextType
+        - keywords:
+            label: Site Keywords
+            type: TextType
+            help: Comma separated
+        - name:
+            label: Site Name
+            type: TextType
+    contact:
+      label: Contact Options
+      fields:
+        - email_from:
+            label: Email Sender
+            type: NamedEmailType
+            help: The email address that will be used as the sender for messages from the contact form. Can be in the format "Contact <contact@example.com>".
+        - email_to:
+            label: Send Emails To
+            type: NamedEmailType
+            help: The email address that will receive messages from the contact form. Can be in the format "Contact <contact@example.com>".
+    ingestion:
+      label: Feed Ingestion Options
+      fields:
+        - uri:
+            label: RSS/Atom Feed URI
+            type: UrlType
+    follow:
+      label: Follow Options
+      fields:
+        - bluesky_uri:
+            label: Bluesky URI
+            type: UrlType
+        - discord_uri:
+            label: Discord URI
+            type: UrlType
+        - facebook_uri:
+            label: Facebook URI
+            type: UrlType
+        - github_uri:
+            label: GitHub URI
+            type: UrlType
+        - instagram_uri:
+            label: Instagram URI
+            type: UrlType
+        - linkedin_uri:
+            label: LinkedIn URI
+            type: UrlType
+        - mastodon_uri:
+            label: Mastodon URI
+            type: UrlType
+        - pinterest_uri:
+            label: Pinterest URI
+            type: UrlType
+        - reddit_uri:
+            label: Reddit URI
+            type: UrlType
+        - snapchat_uri:
+            label: Snapchat URI
+            type: UrlType
+        - spotify_uri:
+            label: Spotify URI
+            type: UrlType
+        - threads_uri:
+            label: Threads URI
+            type: UrlType
+        - tiktok_uri:
+            label: TikTok URI
+            type: UrlType
+        - twitch_uri:
+            label: Twitch URI
+            type: UrlType
+        - twitter-x_uri:
+            label: Twitter/X URI
+            type: UrlType
+        - youtube_uri:
+            label: YouTube URI
+            type: UrlType
+    disqus:
+      label: Disqus Options
+      fields:
+        - shortname:
+            label: Shortname
+            type: TextType
+            help: Under universal code installation, you'll see this as [shortname].disqus.com.
+        - enabled:
+            label: Enabled
+            type: CheckboxType

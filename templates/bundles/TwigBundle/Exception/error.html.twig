@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="{{ app.request is defined ? app.request.locale : 'en' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ status_code }} {{ status_text }} — {{ engine_name }}</title>
+    {{ importmap('app') }}
+</head>
+<body data-controller="theme">
+<nav class="navbar fixed-top navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ path('home_page') }}">{{ engine_name }}</a>
+    </div>
+</nav>
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="text-center py-5">
+        <p class="display-1 fw-bold text-body-tertiary">{{ status_code }}</p>
+        {% if status_code == 404 %}
+            <h1 class="h3 mb-3">{% trans %}Page Not Found{% endtrans %}</h1>
+            <p class="text-body-secondary mb-4">{% trans %}The page you requested could not be found. It may have been moved or deleted.{% endtrans %}</p>
+        {% elseif status_code == 403 %}
+            <h1 class="h3 mb-3">{% trans %}Access Denied{% endtrans %}</h1>
+            <p class="text-body-secondary mb-4">{% trans %}You do not have permission to access this page.{% endtrans %}</p>
+        {% elseif status_code == 503 %}
+            <h1 class="h3 mb-3">{% trans %}Service Unavailable{% endtrans %}</h1>
+            <p class="text-body-secondary mb-4">{% trans %}The site is temporarily unavailable. Please try again in a few minutes.{% endtrans %}</p>
+        {% else %}
+            <h1 class="h3 mb-3">{% trans %}Something Went Wrong{% endtrans %}</h1>
+            <p class="text-body-secondary mb-4">{% trans %}An unexpected error occurred. Please try again or return to the home page.{% endtrans %}</p>
+        {% endif %}
+        <a href="{{ path('home_page') }}" class="btn btn-primary">{% trans %}Go to Home Page{% endtrans %}</a>
+    </div>
+</div>
+<footer class="mt-3 py-3">
+    <div class="container text-center">
+        <button class="btn btn-link text-muted p-0" data-action="theme#toggle" title="{% trans %}Toggle dark mode{% endtrans %}" aria-label="{% trans %}Toggle dark mode{% endtrans %}">
+            <i class="bi bi-moon-fill" data-theme-target="icon"></i>
+        </button>
+    </div>
+</footer>
+<script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-bs-theme',t)})();</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+// 1. Include functions first (so you can manipulate colors, SVGs, calc, etc)
+@import "../../vendor/twbs/bootstrap/scss/functions";
+
+// 2. Include any default variable overrides here
+$blockquote-font-size: 1rem;
+$link-decoration: none;
+
+// 3. Include remainder of required Bootstrap stylesheets (including any separate color mode stylesheets)
+@import "../../vendor/twbs/bootstrap/scss/variables";
+@import "../../vendor/twbs/bootstrap/scss/variables-dark";
+
+// 4. Include any default map overrides here
+
+// 5. Include remainder of required parts
+@import "../../vendor/twbs/bootstrap/scss/maps";
+@import "../../vendor/twbs/bootstrap/scss/mixins";
+@import "../../vendor/twbs/bootstrap/scss/root";
+
+// 6. Optionally include any other parts as needed
+@import "../../vendor/twbs/bootstrap/scss/reboot";
+@import "../../vendor/twbs/bootstrap/scss/type";
+
+// 7. Optionally include utilities API last to generate classes based on the Sass map in `_utilities.scss`
+
+// 8. Add additional custom code here
+body {
+  padding-top: 100px;
+}
+
+blockquote {
+  padding: 0 0 0 2rem;
+  border-left: 5px solid var(--bs-tertiary-bg);
+  @include border-radius();
+
+  code {
+    @include border-radius();
+  }
+}
+
+.annotation {
+  border: 1px solid var(--bs-border-color);
+}
+
+.article-meta > hr,
+.blog-meta > hr,
+hr.gradient {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, currentColor 10%, currentColor 90%, transparent);
+  opacity: 0.2;
+  margin: 0 0 0.25rem;
+}
+
+li {
+  span.article-type-reader {
+    &:before {
+      font-family: 'bootstrap-icons', emoji;
+      color: #7798AB;
+      content: '\F285';
+      padding-right: 0.5em;
+      vertical-align: -.125em;
+    }
+  }
+
+  span.article-type-blog {
+    &:before {
+      font-family: 'bootstrap-icons', emoji;
+      content: '\F280';
+      padding-right: 0.5em;
+      vertical-align: -.125em;
+    }
+  }
+}
+
+.navbar-brand {
+  &:before {
+    font-family: 'bootstrap-icons', emoji;
+    content: '\F183';
+    padding-right: 0.5em;
+    vertical-align: -.125em;
+  }
+}
+
+footer {
+  background-color: var(--bs-tertiary-bg);
+  font-size: $font-size-base * 0.8;
+}
+
+// Symfony BS5 has a broken legend view
+div.no-legend legend {
+  line-height: 0.1;
+  padding: 0 0 0 0;
+  visibility: hidden !important;
+}

@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contact{% endblock %}
+
+{% block body %}
+    <h2>{% trans %}Contact{% endtrans %}</h2>
+    <p class="text-muted">{% trans %}Please fill out your details below and we'll get back to you as soon as possible.{% endtrans %}</p>
+    {{ include('_flashes.html.twig') }}
+    {{ form(form) }}
+{% endblock %}
+
+{% block javascripts %}
+    {% if has_captcha %}
+        <script src="https://www.google.com/recaptcha/api.js"></script>
+        <script>
+            function onSubmit(token) {
+                document.getElementById("contact-form").submit();
+            }
+        </script>
+    {% endif %}
+{% endblock %}

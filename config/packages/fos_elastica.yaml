@@ -1,0 +1,43 @@
+# Read the documentation: https://github.com/FriendsOfSymfony/FOSElasticaBundle/blob/master/doc/setup.md
+fos_elastica:
+    clients:
+        default: 
+            hosts: ['%env(ELASTICSEARCH_HOSTS)%']
+            client_config:
+                ssl_verify: '%env(bool:ELASTICSEARCH_SSL_VERIFY)%'
+    indexes:
+        blog:
+            index_name: blog_%kernel.environment%
+            persistence:
+                driver: orm
+                model: App\Entity\Blog
+                listener: ~
+            properties:
+                author: ~
+                title: ~
+                content: { analyzer: html_analyzer }
+            settings:
+                index:
+                    analysis:
+                        analyzer:
+                            html_analyzer:
+                                tokenizer: standard
+                                char_filter: [html_strip]
+                                filter: [lowercase, stop]
+        reader:
+            index_name: reader_%kernel.environment%
+            persistence:
+                driver: orm
+                model: App\Entity\Reader
+                listener: ~
+            properties:
+                title: ~
+                content: { analyzer: html_analyzer }
+            settings:
+                index:
+                    analysis:
+                        analyzer:
+                            html_analyzer:
+                                tokenizer: standard
+                                char_filter: [html_strip]
+                                filter: [lowercase, stop]

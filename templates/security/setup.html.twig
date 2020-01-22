@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+{% block title %}Admin Setup{% endblock %}
+{% block body %}
+  {{ include('_flashes.html.twig') }}
+  {{ form(form) }}
+{% endblock %}
+{% block sidebar %}
+  <div class="alert alert-secondary" role="alert">
+    <h4 class="alert-heading">Password Tips</h4>
+    <ul>
+      <li>Should be at least 8 characters long</li>
+      <li>Should use uppercase, lowercase, numbers, and symbols</li>
+      <li>Should not be used anywhere else</li>
+    </ul>
+    <hr>
+    <b>Pro Tip:</b> Use a password manager!
+  </div>
+{% endblock %}

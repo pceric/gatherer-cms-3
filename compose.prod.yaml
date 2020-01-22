@@ -1,0 +1,131 @@
+name: gatherer3
+
+services:
+
+  ##
+  ## PHP-FPM application server
+  ##
+  app:
+    build:
+      context: .
+      target: php
+    env_file:
+      - .env
+      - .env.local
+    environment:
+      APP_ENV: prod
+    volumes:
+      - app-var:/var/www/html/var
+    depends_on:
+      traefik:
+        condition: service_healthy
+    networks:
+      - internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  ##
+  ## Nginx web server — handles static assets and proxies PHP to app:9000
+  ##
+  web:
+    build:
+      context: .
+      target: nginx
+    env_file:
+      - .env
+      - .env.local
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gatherer3.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.gatherer3.entrypoints=websecure"
+      - "traefik.http.routers.gatherer3.tls.certresolver=letsencrypt"
+      - "traefik.http.services.gatherer3.loadbalancer.server.port=80"
+    depends_on:
+      - app
+    networks:
+      - internal
+      - traefik-public
+    restart: unless-stopped
+
+  ##
+  ## Cron — runs app:gather on a loop to ingest RSS/ATOM feeds
+  ##
+  cron:
+    build:
+      context: .
+      target: cron
+    env_file:
+      - .env
+      - .env.local
+    environment:
+      APP_ENV: prod
+      SLEEP_SECONDS: 900
+    volumes:
+      - app-var:/var/www/html/var
+    depends_on:
+      - app
+    networks:
+      - internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  ##
+  ## Traefik - provides a Docker web proxy with TLS termination
+  ##
+  traefik:
+    image: traefik:v3.7
+    env_file:
+      - .env
+      - .env.local
+    command:
+      # Docker provider — only route services that explicitly opt in
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=traefik-public
+      # HTTP entrypoint: redirect everything to HTTPS
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      # HTTPS entrypoint with automatic TLS via Let's Encrypt
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.tls=true
+      - --entrypoints.websecure.http.tls.certresolver=letsencrypt
+      # Let's Encrypt ACME via HTTP-01 challenge
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=websecure
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      # Uncomment to use the staging CA while testing (avoids rate limits)
+      #- --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --log.level=INFO
+      - --accesslog=true
+      - --ping
+    ports:
+      - "8080:80"
+      - "4443:443"
+    volumes:
+      # Use this line for Docker
+      #- /var/run/docker.sock:/var/run/docker.sock:ro
+      # or this line for Podman instead
+      - /run/user/1000/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      start_interval: 10s
+    networks:
+      - traefik-public
+    restart: unless-stopped
+
+volumes:
+  app-var:
+  letsencrypt:
+
+networks:
+  internal:
+    driver: bridge
+  traefik-public:
+    name: traefik-public
+

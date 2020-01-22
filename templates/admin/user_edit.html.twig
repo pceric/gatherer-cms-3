@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {% if isNew %}{% trans %}Create User{% endtrans %}{% else %}{% trans %}Edit User{% endtrans %}{% endif %}
+{% endblock %}
+
+{% block body %}
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('admin') }}">{% trans %}Administration{% endtrans %}</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('admin_users') }}">{% trans %}Users{% endtrans %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% if isNew %}{% trans %}Create User{% endtrans %}{% else %}{% trans %}Edit User{% endtrans %}{% endif %}</li>
+        </ol>
+    </nav>
+    <h2 class="mb-4">
+        <i class="bi bi-person me-2"></i>
+        {% if isNew %}
+            {% trans %}Create User{% endtrans %}
+        {% else %}
+            {% trans %}Edit User{% endtrans %}: {{ user.username }}
+        {% endif %}
+    </h2>
+    {{ include('_flashes.html.twig') }}
+
+    <div class="row">
+        <div class="col-md-6">
+            {{ form_start(form) }}
+            {{ form_row(form.username) }}
+            {{ form_row(form.displayname) }}
+            {{ form_row(form.role) }}
+            {% if not isNew and user.id == 1 %}
+                <p class="text-muted small mt-n2">{% trans %}The original admin's role cannot be changed.{% endtrans %}</p>
+            {% endif %}
+            <hr>
+            {{ form_row(form.password) }}
+            <div class="d-flex gap-2">
+                {{ form_row(form.save) }}
+                {{ form_row(form.cancel) }}
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

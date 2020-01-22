@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env.local
+.env.*.local
+.phpunit.cache
+var/cache
+var/log
+var/sass
+var/sessions
+node_modules
+tests
+*.md
+compose.yaml
+compose.override.yaml
+compose.prod.yaml
+compose.traefik.yaml

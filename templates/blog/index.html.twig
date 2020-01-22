@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% set route = app.request.attributes.get('_route') %}
+{% block title %}{{ route == 'article' ? 'Articles' : (route == 'gathered' ? 'Gathered' : 'News') }}{% endblock %}
+
+{% block body %}
+    <h2>{{ route == 'article' ? 'Articles' : (route == 'gathered' ? 'Gathered' : 'News') }}</h2>
+    {% if years|length > 1 %}
+    <select class="form-select form-select-sm w-auto mb-3" onchange="window.location=this.value" aria-label="{% trans %}Filter by year{% endtrans %}">
+        <option value="{{ path(route) }}" {{ year is null ? 'selected' : '' }}>{% trans %}All years{% endtrans %}</option>
+        {% for y in years %}
+            <option value="{{ path(route, {year: y}) }}" {{ year == y ? 'selected' : '' }}>{{ y }}</option>
+        {% endfor %}
+    </select>
+    {% endif %}
+<ul class="list-unstyled mt-2">
+        {% for blog in union %}
+            <li class="py-2 border-bottom border-opacity-25 d-flex align-items-center gap-2">
+                <span class="article-type-{{ blog.type }}"></span>
+                <time class="text-muted small text-nowrap" datetime="{{ blog.pubdate|date('c') }}" data-format="date">{{ blog.pubdate|format_datetime('short', 'none') }}</time>
+                <a class="fw-semibold" href="{{ path(blog.type == 'reader' ? 'reader_show' : 'blog_show', {'slug': blog.slug}) }}">{{ blog.title }}</a>
+            </li>
+        {% else %}
+            <li class="py-3 text-muted">{% trans %}No posts yet.{% endtrans %}</li>
+        {% endfor %}
+    </ul>
+    {% if pager.haveToPaginate %}
+    <nav aria-label="page" class="mt-3">
+        {{ pagerfanta(pager, {'omitFirstPage': true }) }}
+    </nav>
+    {% endif %}
+{% endblock %}

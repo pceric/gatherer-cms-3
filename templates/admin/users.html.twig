@@ -1,0 +1,104 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% trans %}Users{% endtrans %}{% endblock %}
+
+{% block body %}
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('admin') }}">{% trans %}Administration{% endtrans %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans %}Users{% endtrans %}</li>
+        </ol>
+    </nav>
+    <h2 class="mb-4"><i class="bi bi-people me-2 text-secondary"></i>{% trans %}Users{% endtrans %}</h2>
+    {{ include('_flashes.html.twig') }}
+
+    <div class="mb-3 text-end">
+        <a href="{{ path('admin_user_create') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i>{% trans %}Add User{% endtrans %}
+        </a>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">{% trans %}Action{% endtrans %}</th>
+                <th scope="col">{% trans %}Username{% endtrans %}</th>
+                <th scope="col">{% trans %}Display Name{% endtrans %}</th>
+                <th scope="col">{% trans %}Role{% endtrans %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>
+                    <a href="{{ path('admin_user_edit', {id: user.id}) }}" title="{% trans %}Edit{% endtrans %}" data-bs-toggle="tooltip">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    {% if user.id != 1 %}
+                        <a href="#"
+                           data-action="{{ path('admin_user_delete', {id: user.id}) }}"
+                           data-token="{{ csrf_token('delete_user_' ~ user.id) }}"
+                           data-bs-toggle="modal"
+                           data-bs-target="#confirm-delete"
+                           title="{% trans %}Delete{% endtrans %}">
+                            <i class="bi bi-trash ms-2"></i>
+                        </a>
+                    {% else %}
+                        <i class="bi bi-lock text-muted ms-2" title="{% trans %}Protected{% endtrans %}" data-bs-toggle="tooltip"></i>
+                    {% endif %}
+                </td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.displayname }}</td>
+                <td>
+                    {% if 'ROLE_ADMIN' in user.roles %}
+                        <span class="badge bg-danger">{% trans %}Admin{% endtrans %}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{% trans %}Editor{% endtrans %}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form id="delete-form" method="post" action="">
+        <input type="hidden" name="_token" id="delete-token" value="">
+    </form>
+
+    <div class="modal fade" id="confirm-delete" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{% trans %}Really Delete?{% endtrans %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{% trans %}Delete this user? This action is not reversible.{% endtrans %}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans %}Close{% endtrans %}</button>
+                    <button type="button" class="btn btn-danger" id="delete-confirm-btn">{% trans %}Delete{% endtrans %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+<script type="module">
+    import * as bootstrap from 'bootstrap';
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+    const modal = document.getElementById('confirm-delete');
+    const deleteForm = document.getElementById('delete-form');
+    const deleteToken = document.getElementById('delete-token');
+    const confirmBtn = document.getElementById('delete-confirm-btn');
+    modal.addEventListener('show.bs.modal', function(e) {
+        const trigger = e.relatedTarget.closest('[data-action]');
+        deleteForm.action = trigger.dataset.action;
+        deleteToken.value = trigger.dataset.token;
+        confirmBtn.onclick = () => deleteForm.submit();
+    });
+</script>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

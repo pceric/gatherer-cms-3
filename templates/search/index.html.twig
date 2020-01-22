@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Search{% endblock %}
+
+{% block body %}
+    {{ include('_flashes.html.twig') }}
+    <h2>{% trans %}Search{% endtrans %}</h2>
+    <form method="get" action="{{ path('search') }}" class="mb-4">
+        <div class="input-group">
+            <input type="search" name="q" value="{{ query|e }}" class="form-control" placeholder="{% trans %}Search…{% endtrans %}" autofocus>
+            <button type="submit" class="btn btn-primary">{% trans %}Search{% endtrans %}</button>
+        </div>
+    </form>
+    {% if query %}
+        <p class="text-muted">{% trans with {'%count%': pager.nbResults, '%query%': query} %}%count% result(s) for <strong>%query%</strong>{% endtrans %}</p>
+        {% if pager.nbResults == 0 %}
+            <p>No results found.</p>
+        {% else %}
+            <ul class="list-unstyled mt-2">
+                {% for result in pager.currentPageResults %}
+                    <li class="py-2 border-bottom border-opacity-25 d-flex align-items-center gap-2">
+                        <span class="article-type-{{ result.entity }}"></span>
+                        <time class="text-muted small text-nowrap" datetime="{{ result.pubdate|date('c') }}" data-format="date">{{ result.pubdate|format_datetime('short', 'none') }}</time>
+                        <a class="fw-semibold" href="{{ path(result.entity == 'reader' ? 'reader_show' : 'blog_show', {'slug': result.slug}) }}">{{ result.title }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+            {{ pagerfanta(pager, {'omitFirstPage': true}) }}
+        {% endif %}
+    {% endif %}
+{% endblock %}

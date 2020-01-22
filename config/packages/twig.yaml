@@ -1,0 +1,16 @@
+twig:
+    file_name_pattern: '*.twig'
+    default_path: '%kernel.project_dir%/templates'
+    form_themes: ['bootstrap_5_layout.html.twig']
+    globals:
+        config: '@App\Service\ConfigService'
+        engine_name: '%env(ENGINE_NAME)%'
+        engine_major_version: '%env(ENGINE_MAJOR_VERSION)%'
+        available:
+            elasticsearch: '%env(defined:ELASTICSEARCH_HOSTS)%'
+            mailer: '%env(defined:MAILER_DSN)%'
+            recaptcha: '%env(defined:GOOGLE_RECAPTCHA_SITE_KEY)%'
+
+when@test:
+    twig:
+        strict_variables: true

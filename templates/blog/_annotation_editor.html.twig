@@ -1,0 +1,16 @@
+<div data-controller="annotation" data-annotation-url-value="{{ url }}">
+    <div data-annotation-target="display">
+        {% if annotation is not empty %}
+        <p class="shadow-none p-3 bg-body-secondary rounded annotation">{{ annotation|raw }}</p>
+        {% endif %}
+        <a href="#" class="text-muted small" data-action="click->annotation#edit">
+            <i class="bi bi-pencil-square"></i>
+            <span data-annotation-target="label">{% if annotation is not empty %}{% trans %}Edit annotation{% endtrans %}{% else %}{% trans %}Add annotation{% endtrans %}{% endif %}</span>
+        </a>
+    </div>
+    <div class="d-none mt-2" data-annotation-target="editor">
+        <textarea class="form-control mb-2" rows="4" data-annotation-target="textarea">{{ annotation|default('') }}</textarea>
+        <button class="btn btn-sm btn-primary" data-action="click->annotation#save">{% trans %}Save{% endtrans %}</button>
+        <button class="btn btn-sm btn-secondary ms-1" data-action="click->annotation#cancel">{% trans %}Cancel{% endtrans %}</button>
+    </div>
+</div>

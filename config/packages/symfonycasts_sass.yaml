@@ -1,0 +1,10 @@
+symfonycasts_sass:
+    root_sass:
+        - 'assets/styles/app.scss'
+    sass_options:
+        quiet: true
+
+when@dev:
+    symfonycasts_sass:
+        sass_options:
+            quiet: false

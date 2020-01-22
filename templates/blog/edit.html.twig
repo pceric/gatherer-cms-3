@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% if isNew %}{% trans %}New Blog{% endtrans %}{% else %}{% trans %}Edit Blog{% endtrans %}{% endif %}{% endblock %}
+
+{% block body %}
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('admin') }}">{% trans %}Administration{% endtrans %}</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('admin_blog') }}">{% trans %}Blog Entries{% endtrans %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% if isNew %}{% trans %}New Blog{% endtrans %}{% else %}{% trans %}Edit Blog{% endtrans %}{% endif %}</li>
+        </ol>
+    </nav>
+    <div class="edit">
+        {{ form(form) }}
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@8.6.0/tinymce.min.js" integrity="sha256-3/Z/zZH4Qojv3EWPyqvN8hhwTq638HiBKscESnRbwA0=" crossorigin="anonymous"></script>
+    <script>
+        const dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        tinymce.init({
+            license_key: 'gpl',
+            promotion: false,
+            selector: 'textarea#form_content',
+            height: 500,
+            plugins: ['code', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'pagebreak'],
+            // toolbar: 'bullist numlist'
+            skin: dark ? 'oxide-dark' : 'oxide',
+            content_css: dark ? 'dark' : 'default',
+        });
+    </script>
+    <script>
+        // Convert the stored UTC pubdate to browser local time for display,
+        // then convert back to UTC on submit so the server always stores UTC.
+        const pubdate = document.getElementById('form_pubdate');
+        if (pubdate && pubdate.value) {
+            const utc = new Date(pubdate.value.replace(' ', 'T') + 'Z');
+            const pad = n => String(n).padStart(2, '0');
+            pubdate.value = `${utc.getFullYear()}-${pad(utc.getMonth()+1)}-${pad(utc.getDate())}T${pad(utc.getHours())}:${pad(utc.getMinutes())}`;
+            pubdate.form.addEventListener('submit', () => {
+                pubdate.value = new Date(pubdate.value).toISOString().slice(0, 16);
+            }, { capture: true });
+        }
+    </script>
+{% endblock %}

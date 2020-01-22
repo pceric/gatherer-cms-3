@@ -1,0 +1,86 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% trans %}Blog Entries{% endtrans %}{% endblock %}
+
+{% block body %}
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('admin') }}">{% trans %}Administration{% endtrans %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans %}Blog Entries{% endtrans %}</li>
+        </ol>
+    </nav>
+    <h2 class="mb-4"><i class="bi bi-journal-text me-2 text-success"></i>{% trans %}Blog Entries{% endtrans %}</h2>
+    {{ include('_flashes.html.twig') }}
+    <p>
+        <a href="{{ path('admin_blog_create') }}"><i class="bi bi-journal-plus mx-1"></i>{% trans %}New Blog{% endtrans %}</a>
+    </p>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">{% trans %}Action{% endtrans%}</th>
+          <th scope="col">{% trans %}Title{% endtrans%}</th>
+          <th scope="col">{% trans %}Published{% endtrans%}</th>
+          <th scope="col">{% trans %}Pub Date{% endtrans%}</th>
+          <th scope="col">{% trans %}Mod Date{% endtrans%}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for blog in blogs %}
+        <tr>
+          <th scope="row">
+              <a href="{{ path('admin_blog_edit', {'slug': blog.slug}) }}"><i class="bi bi-pencil" title="{% trans %}Edit{% endtrans %}" data-bs-toggle="tooltip"></i></a>
+              <a href="#" data-action="{{ path('admin_blog_delete', {'id': blog.id}) }}" data-token="{{ csrf_token('delete_blog_' ~ blog.id) }}" data-bs-toggle="modal" data-bs-target="#confirm-delete"><i class="bi bi-trash" title="{% trans %}Delete{% endtrans%}" data-bs-toggle="tooltip"></i></a>
+          </th>
+          <td>{{ blog.title|u.truncate(50, '...') }}</td>
+          <td>{% if blog.published %}<i class="bi bi-check"></i>{% endif %}</td>
+          <td><time datetime="{{ blog.pubdate|date('c') }}" data-format="short">{{ blog.pubdate|format_datetime('short', 'short') }}</time></td>
+          <td>{% if blog.moddate %}<time datetime="{{ blog.moddate|date('c') }}" data-format="short">{{ blog.moddate|format_datetime('short', 'short') }}</time>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if pager.haveToPaginate() %}{{ pagerfanta(pager, {'omitFirstPage': true }) }}{% endif %}
+
+    <form id="delete-form" method="post" action="">
+        <input type="hidden" name="_token" id="delete-token" value="">
+    </form>
+
+    <!-- Modal -->
+    <div class="modal fade" id="confirm-delete" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel">{% trans %}Really Delete?{% endtrans %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{% trans %}Delete this item? This action is not reversible.{% endtrans %}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans %}Close{% endtrans %}</button>
+                    <button type="button" class="btn btn-danger" id="delete-confirm-btn">{% trans %}Delete{% endtrans %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+<script type="module">
+    import * as bootstrap from 'bootstrap';
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+    const modal = document.getElementById('confirm-delete');
+    const deleteForm = document.getElementById('delete-form');
+    const deleteToken = document.getElementById('delete-token');
+    const confirmBtn = document.getElementById('delete-confirm-btn');
+    modal.addEventListener('show.bs.modal', function(e) {
+        const trigger = e.relatedTarget.closest('[data-action]');
+        deleteForm.action = trigger.dataset.action;
+        deleteToken.value = trigger.dataset.token;
+        confirmBtn.onclick = () => deleteForm.submit();
+    });
+</script>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
+

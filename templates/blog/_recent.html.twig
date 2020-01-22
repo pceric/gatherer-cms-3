@@ -1,0 +1,10 @@
+<ul class="list-unstyled mb-3">
+    {% for blog in blogs %}
+    <li class="py-2 d-flex align-items-center gap-2" style="border-bottom: 1px dashed var(--bs-border-color);">
+        <span class="article-type-{{ blog.type }}"></span>
+        <a class="small fw-semibold" href="{{ path(blog.type == 'reader' ? 'reader_show' : 'blog_show', {slug: blog.slug}) }}">{{ blog.title|u.truncate(48, '...') }}</a>
+    </li>
+    {% else %}
+    <li class="py-2 text-muted small">{% trans %}No posts yet.{% endtrans %}</li>
+    {% endfor %}
+</ul>

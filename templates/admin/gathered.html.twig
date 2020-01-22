@@ -1,0 +1,82 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% trans %}Gathered Feed Entries{% endtrans %}{% endblock %}
+
+{% block body %}
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('admin') }}">{% trans %}Administration{% endtrans %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans %}Gathered Feed Entries{% endtrans %}</li>
+        </ol>
+    </nav>
+    <h2 class="mb-4"><i class="bi bi-rss me-2 text-warning"></i>{% trans %}Gathered Feed Entries{% endtrans %}</h2>
+    {{ include('_flashes.html.twig') }}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">{% trans %}Action{% endtrans%}</th>
+          <th scope="col">{% trans %}Title{% endtrans%}</th>
+          <th scope="col">{% trans %}Source{% endtrans%}</th>
+          <th scope="col">{% trans %}Pub Date{% endtrans%}</th>
+          <th scope="col">{% trans %}Mod Date{% endtrans%}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for reader in readers %}
+        <tr>
+          <th scope="row">
+              <a href="{{ path('reader_show', {'slug': reader.slug}) }}"><i class="bi bi-eye" title="{% trans %}View{% endtrans %}" data-bs-toggle="tooltip"></i></a>
+              <a href="#" data-action="{{ path('admin_gathered_delete', {'id': reader.id}) }}" data-token="{{ csrf_token('delete_reader_' ~ reader.id) }}" data-bs-toggle="modal" data-bs-target="#confirm-delete"><i class="bi bi-trash" title="{% trans %}Delete{% endtrans%}" data-bs-toggle="tooltip"></i></a>
+          </th>
+          <td>{{ reader.title|u.truncate(50, '...') }}</td>
+          <td><a href="{{ reader.source }}" target="_blank" rel="noopener">{{ parse_url(reader.source, 1) }}</a></td>
+          <td><time datetime="{{ reader.pubdate|date('c') }}" data-format="short">{{ reader.pubdate|format_datetime('short', 'short') }}</time></td>
+          <td>{% if reader.moddate %}<time datetime="{{ reader.moddate|date('c') }}" data-format="short">{{ reader.moddate|format_datetime('short', 'short') }}</time>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if pager.haveToPaginate() %}{{ pagerfanta(pager, {'omitFirstPage': true }) }}{% endif %}
+
+    <form id="delete-form" method="post" action="">
+        <input type="hidden" name="_token" id="delete-token" value="">
+    </form>
+
+    <!-- Modal -->
+    <div class="modal fade" id="confirm-delete" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel">{% trans %}Really Delete?{% endtrans %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{% trans %}Delete this item? This action is not reversible.{% endtrans %}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans %}Close{% endtrans %}</button>
+                    <button type="button" class="btn btn-danger" id="delete-confirm-btn">{% trans %}Delete{% endtrans %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+<script type="module">
+    import * as bootstrap from 'bootstrap';
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+    const modal = document.getElementById('confirm-delete');
+    const deleteForm = document.getElementById('delete-form');
+    const deleteToken = document.getElementById('delete-token');
+    const confirmBtn = document.getElementById('delete-confirm-btn');
+    modal.addEventListener('show.bs.modal', function(e) {
+        const trigger = e.relatedTarget.closest('[data-action]');
+        deleteForm.action = trigger.dataset.action;
+        deleteToken.value = trigger.dataset.token;
+        confirmBtn.onclick = () => deleteForm.submit();
+    });
+</script>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
