@@ -16,7 +16,7 @@
 {% endblock %}
 
 {% block javascripts %}
-    <script src="https://cdn.jsdelivr.net/npm/tinymce@8.6.0/tinymce.min.js" integrity="sha256-3/Z/zZH4Qojv3EWPyqvN8hhwTq638HiBKscESnRbwA0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@8.8.0/tinymce.min.js" integrity="sha256-0vKveGsUec1kxra/RF7dtabAs+W4/2WhhUDK3Ql20PY=" crossorigin="anonymous"></script>
     <script>
         const dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
         tinymce.init({
@@ -24,8 +24,10 @@
             promotion: false,
             selector: 'textarea#form_content',
             height: 500,
-            plugins: ['code', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'pagebreak'],
-            // toolbar: 'bullist numlist'
+            browser_spellcheck: true,
+            contextmenu: false,
+            plugins: ['code', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'pagebreak', 'table'],
+            toolbar: 'undo redo | styles | bold italic | numlist bullist | link image | pagebreak',
             skin: dark ? 'oxide-dark' : 'oxide',
             content_css: dark ? 'dark' : 'default',
         });

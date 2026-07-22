@@ -1,4 +1,4 @@
-{% set frankenphpHotReload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
+{% set frankenphp_hot_reload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
 <!DOCTYPE html>
 <html lang="{{ app.request.getLocale() }}">
 <head>
@@ -8,7 +8,7 @@
     <meta name="author" content="{{ config.get('author') }}">
     <meta name="description" content="{{ config.get('desc') }}">
     <meta name="keywords" content="{{ config.get('keywords') }}">
-    {% if frankenphpHotReload %}<meta name="frankenphp-hot-reload:url" content="{{ frankenphpHotReload }}">{% endif %}
+    {% if frankenphp_hot_reload %}<meta name="frankenphp-hot-reload:url" content="{{ frankenphp_hot_reload }}">{% endif %}
     <title>{% block title %}Unknown{% endblock %} - {{ config.get('name') | default(engine_name) }}</title>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="{{ path('feed', {type: 'atom'}) }}">
     <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="{{ path('feed', {type: 'rss'}) }}">
@@ -117,7 +117,7 @@
 </footer>
 <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-bs-theme',t)})();</script>
 {% block javascripts %}{% endblock %}
-{% if frankenphpHotReload %}
+{% if frankenphp_hot_reload %}
 <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
 <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
 {% endif %}

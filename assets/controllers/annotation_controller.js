@@ -1,7 +1,7 @@
 /* stimulusFetch: 'lazy' */
 import { Controller } from '@hotwired/stimulus';
 
-const TINYMCE_URL = 'https://cdn.jsdelivr.net/npm/tinymce@8.6.0/tinymce.min.js';
+const TINYMCE_URL = 'https://cdn.jsdelivr.net/npm/tinymce@8.8.0/tinymce.min.js';
 
 export default class extends Controller {
     static values = { url: String };
@@ -14,7 +14,7 @@ export default class extends Controller {
         await new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = TINYMCE_URL;
-            script.integrity = 'sha256-3/Z/zZH4Qojv3EWPyqvN8hhwTq638HiBKscESnRbwA0=';
+            script.integrity = 'sha256-0vKveGsUec1kxra/RF7dtabAs+W4/2WhhUDK3Ql20PY=';
             script.crossOrigin = 'anonymous';
             script.onload = resolve;
             script.onerror = reject;
@@ -36,8 +36,10 @@ export default class extends Controller {
             target: this.textareaTarget,
             height: 200,
             menubar: false,
-            plugins: ['link', 'lists'],
-            toolbar: 'bold italic | bullist numlist | link | removeformat',
+            browser_spellcheck: true,
+            contextmenu: false,
+            plugins: ['emoticons', 'link', 'lists'],
+            toolbar: 'bold italic removeformat | bullist numlist | link | emoticons',
             skin: dark ? 'oxide-dark' : 'oxide',
             content_css: dark ? 'dark' : 'default',
         });
