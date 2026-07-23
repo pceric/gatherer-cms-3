@@ -12,6 +12,7 @@
     <title>{% block title %}Unknown{% endblock %} - {{ config.get('name') | default(engine_name) }}</title>
     <link rel="alternate" type="application/atom+xml" title="Atom Feed" href="{{ path('feed', {type: 'atom'}) }}">
     <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="{{ path('feed', {type: 'rss'}) }}">
+    <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-bs-theme',t)})();</script>
     {% block importmap %}{{ importmap('app') }}{% endblock %}
     {% block stylesheets %}{% endblock %}
 </head>
@@ -115,7 +116,6 @@
         {% endblock %}
     </div>
 </footer>
-<script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-bs-theme',t)})();</script>
 {% block javascripts %}{% endblock %}
 {% if frankenphp_hot_reload %}
 <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
