@@ -1,7 +1,7 @@
 /* stimulusFetch: 'lazy' */
 import { Controller } from '@hotwired/stimulus';
 
-const TINYMCE_URL = 'https://cdn.jsdelivr.net/npm/tinymce@8.8.0/tinymce.min.js';
+const TINYMCE_URL = 'https://cdn.jsdelivr.net/npm/tinymce@8.8.2/tinymce.min.js';
 
 export default class extends Controller {
     static values = { url: String };
@@ -14,7 +14,7 @@ export default class extends Controller {
         await new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = TINYMCE_URL;
-            script.integrity = 'sha256-0vKveGsUec1kxra/RF7dtabAs+W4/2WhhUDK3Ql20PY=';
+            script.integrity = 'sha256-5oqOB4fPKq/HBByRQcjsBAGad2L46tZBcGFZO+Ehnp0=';
             script.crossOrigin = 'anonymous';
             script.onload = resolve;
             script.onerror = reject;

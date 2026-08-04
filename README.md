@@ -58,6 +58,11 @@ A quick way to get started is with Docker:
     1. If you get an access denied error you may need to change the `GCMS_ADMIN_TRUSTED_IPS` setting as described in the installation.
 2. On future visits you can log in by using the `/login` or `/admin` URLs.
 
+### CLI Commands
+There are a couple cli commands available in GCMS using the Symfony console (`bin/console`).
+- `app:gather` - see [RSS/ATOM Gathering](#rssatom-gathering) below
+- `app:check-links` - will check all links and images in published blog articles for those that are broken
+
 ## Further Setup
 Not required but recommended.
 
@@ -67,6 +72,8 @@ Not required but recommended.
 3. It's best to use something like a cronjob to run this periodically.
 
 ### ElasticSearch
+Upon setting up ElasticSearch, a search box will appear in the top nav bar.
+
 1. Install and start an ElasticSearch 8+ (or compatible) server
 2. Open `.env.local` and update the `ELASTICSEARCH_HOSTS` value with your server(s)
 3. Create the indexes: `fos:elastica:create`

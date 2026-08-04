@@ -17,6 +17,7 @@
     {% block stylesheets %}{% endblock %}
 </head>
 <body data-controller="theme local-time">
+{{ include('_flashes.html.twig') }}
 <nav class="navbar fixed-top navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
         <a class="navbar-brand" href="{{ path('home_page') }}">{{ config.get('name') | default(engine_name) }}</a>

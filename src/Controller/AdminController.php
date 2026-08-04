@@ -151,6 +151,9 @@ class AdminController extends AbstractController
             $em->flush();
 
             $this->addFlash('success', 'Blog Entry Saved!');
+            if (!$blog->getPublished()) {
+                return $this->redirectToRoute('admin_blog', ['page' => $request->query->getInt('page_history', 1)]);
+            }
             return $this->redirectToRoute('blog_show', ['slug' => $blog->getSlug()]);
         }
 

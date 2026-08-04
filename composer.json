@@ -26,7 +26,7 @@
         "babdev/pagerfanta-bundle": "^4.6",
         "doctrine/data-fixtures": "^2.2.1",
         "doctrine/dbal": "^4.4.4",
-        "doctrine/doctrine-bundle": "^2.18.3",
+        "doctrine/doctrine-bundle": "^2.19.0",
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^3.6.7",
         "elasticsearch/elasticsearch": "^8.19",
@@ -84,7 +84,7 @@
         "symfony/css-selector": "7.4.*",
         "symfony/debug-bundle": "7.4.*",
         "symfony/maker-bundle": "^1.67",
-        "symfony/phpunit-bridge": "^8.1.1",
+        "symfony/phpunit-bridge": "^8.1.2",
         "symfony/stopwatch": "7.4.*",
         "symfony/web-profiler-bundle": "7.4.*"
     },
