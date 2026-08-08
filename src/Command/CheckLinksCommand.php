@@ -7,6 +7,11 @@
 namespace App\Command;
 
 use App\Repository\BlogRepository;
+use GuzzleHttp\Client;
+use GuzzleHttp\Pool;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\TransferStats;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,8 +19,6 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[AsCommand(
     name: 'app:check-links',
@@ -25,14 +28,22 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class CheckLinksCommand extends Command
 {
     private const TIMEOUT = 10;
+    private const CONCURRENCY = 10;
+    private const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36';
+
+    private readonly Client $httpClient;
 
     public function __construct(
         private readonly BlogRepository $blogRepo,
-        private readonly HttpClientInterface $httpClient,
         #[Autowire(env: 'DEFAULT_URI')]
         private readonly string $defaultUri = '',
     ) {
         parent::__construct();
+
+        $this->httpClient = new Client([
+            'headers' => ['User-Agent' => self::USER_AGENT],
+            'http_errors' => false,
+        ]);
     }
 
     protected function configure(): void
@@ -40,13 +51,15 @@ class CheckLinksCommand extends Command
         $this
             ->addOption('csv', null, InputOption::VALUE_REQUIRED, 'Write results to this CSV file instead of printing a table')
             ->addOption('slug', null, InputOption::VALUE_REQUIRED, 'Only check the blog post with this slug (published or not)')
-            ->addOption('timeout', null, InputOption::VALUE_REQUIRED, 'Per-request timeout in seconds', self::TIMEOUT);
+            ->addOption('timeout', null, InputOption::VALUE_REQUIRED, 'Per-request timeout in seconds', self::TIMEOUT)
+            ->addOption('concurrency', null, InputOption::VALUE_REQUIRED, 'Number of requests to run in parallel', self::CONCURRENCY);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $timeout = (float) $input->getOption('timeout');
+        $concurrency = (int) $input->getOption('concurrency');
         $csvPath = $input->getOption('csv');
         $slug = $input->getOption('slug');
 
@@ -80,20 +93,46 @@ class CheckLinksCommand extends Command
 
         $io->progressStart(count($urls));
         $broken = [];
+        $ignored = [];
+
+        $checkUrls = [];
         foreach ($urls as $url => $info) {
             if ($info['checkUrl'] === null) {
-                $result = 'Relative URL, cannot verify without a site base URL';
-            } else {
-                $result = $this->checkUrl($info['checkUrl'], $timeout);
-            }
-            if ($result !== null) {
                 foreach (array_keys($info['slugs']) as $slug) {
-                    $broken[] = [$slug, $info['type'], $url, $result];
+                    $broken[] = [$slug, $info['type'], $url, 'Relative URL, cannot verify without a site base URL'];
                 }
+                $io->progressAdvance();
+            } else {
+                $checkUrls[$url] = $info['checkUrl'];
             }
-            $io->progressAdvance();
         }
+
+        $results = $this->checkUrls($checkUrls, $timeout, $concurrency, $io);
+
+        foreach ($results as $url => $result) {
+            $info = $urls[$url];
+            if (is_int($result)) {
+                if ($result >= 600) {
+                    $ignored[] = sprintf('Ignoring non-standard HTTP status %d for %s', $result, $info['checkUrl']);
+                    continue;
+                }
+                if ($result < 400) {
+                    continue;
+                }
+                $message = (string) $result;
+            } else {
+                $message = $result;
+            }
+            foreach (array_keys($info['slugs']) as $slug) {
+                $broken[] = [$slug, $info['type'], $url, $message];
+            }
+        }
+
         $io->progressFinish();
+
+        if (!empty($ignored)) {
+            $io->note($ignored);
+        }
 
         usort($broken, fn($a, $b) => $a[0] <=> $b[0]);
 
@@ -192,25 +231,85 @@ class CheckLinksCommand extends Command
         fclose($handle);
     }
 
-    private function checkUrl(string $url, float $timeout): ?string
+    /**
+     * Checks every URL concurrently via a HEAD request. URLs whose HEAD request comes back
+     * with a >=400 status are retried with a GET, since some servers reject HEAD entirely.
+     *
+     * @param array<string, string> $checkUrls Original url => checkUrl to request
+     * @return array<string, int|string> Original url => status code, or an error message
+     */
+    private function checkUrls(array $checkUrls, float $timeout, int $concurrency, SymfonyStyle $io): array
     {
-        try {
-            $response = $this->httpClient->request('HEAD', $url, ['timeout' => $timeout]);
-            $statusCode = $response->getStatusCode();
-
-            // Some servers reject HEAD; fall back to GET before declaring it broken
-            if ($statusCode >= 400) {
-                $response = $this->httpClient->request('GET', $url, ['timeout' => $timeout]);
-                $statusCode = $response->getStatusCode();
-            }
-
-            if ($statusCode >= 400) {
-                return (string) $statusCode;
-            }
-
-            return null;
-        } catch (ExceptionInterface $e) {
-            return $e->getMessage();
+        if (empty($checkUrls)) {
+            return [];
         }
+
+        $results = [];
+        $getNeeded = [];
+        $this->sendBatch($checkUrls, 'HEAD', $timeout, $concurrency, function (string $url, int|string $result) use (&$results, &$getNeeded, $checkUrls, $io) {
+            if (is_int($result) && $result >= 400) {
+                $getNeeded[$url] = $checkUrls[$url];
+            } else {
+                $results[$url] = $result;
+                $io->progressAdvance();
+            }
+        });
+
+        if (!empty($getNeeded)) {
+            $this->sendBatch($getNeeded, 'GET', $timeout, $concurrency, function (string $url, int|string $result) use (&$results, $io) {
+                $results[$url] = $result;
+                $io->progressAdvance();
+            });
+        }
+
+        return $results;
+    }
+
+    /**
+     * Sends the given requests concurrently, capped at $concurrency in flight at a time,
+     * invoking $onResult as each individual request completes so callers can report
+     * progress in real time rather than waiting for the whole batch to finish.
+     *
+     * @param array<string, string> $checkUrls Original url => checkUrl to request
+     * @param callable(string, int|string): void $onResult
+     */
+    private function sendBatch(array $checkUrls, string $method, float $timeout, int $concurrency, callable $onResult): void
+    {
+        // Guzzle's PSR-7 Response rejects any status code outside 100-599, so a server
+        // replying with a non-standard code (e.g. 600) never reaches 'fulfilled' as an int -
+        // it lands in 'rejected' instead. Track the raw curl http_code per request URI via
+        // on_stats (fired before Response construction is attempted, so it still has the
+        // real code) so 'rejected' can recover it instead of reporting a generic error
+        // message. Correlate by URI rather than Request object identity, since Guzzle's
+        // middleware stack clones the request (PSR-7 messages are immutable) before it
+        // reaches the handler.
+        $rawStatusCodes = [];
+
+        $requests = function () use ($checkUrls, $method) {
+            foreach ($checkUrls as $url => $checkUrl) {
+                yield $url => new Request($method, $checkUrl);
+            }
+        };
+
+        $pool = new Pool($this->httpClient, $requests(), [
+            'concurrency' => max(1, $concurrency),
+            'options' => [
+                'timeout' => $timeout,
+                'on_stats' => function (TransferStats $stats) use (&$rawStatusCodes) {
+                    $httpCode = $stats->getHandlerStat('http_code');
+                    if (is_int($httpCode) && $httpCode > 0) {
+                        $rawStatusCodes[(string) $stats->getRequest()->getUri()] = $httpCode;
+                    }
+                },
+            ],
+            'fulfilled' => function (ResponseInterface $response, string $url) use ($onResult) {
+                $onResult($url, $response->getStatusCode());
+            },
+            'rejected' => function (\Throwable $reason, string $url) use ($onResult, $checkUrls, &$rawStatusCodes) {
+                $onResult($url, $rawStatusCodes[$checkUrls[$url]] ?? $reason->getMessage());
+            },
+        ]);
+
+        $pool->promise()->wait();
     }
 }
