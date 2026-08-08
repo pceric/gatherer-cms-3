@@ -107,7 +107,8 @@ class CheckLinksCommand extends Command
             }
         }
 
-        $results = $this->checkUrls($checkUrls, $timeout, $concurrency, $io);
+        $botBlocked = [];
+        $results = $this->checkUrls($checkUrls, $timeout, $concurrency, $io, $botBlocked);
 
         foreach ($results as $url => $result) {
             $info = $urls[$url];
@@ -117,6 +118,10 @@ class CheckLinksCommand extends Command
                     continue;
                 }
                 if ($result < 400) {
+                    continue;
+                }
+                if (isset($botBlocked[$url])) {
+                    $ignored[] = sprintf('Skipping %s: blocked by %s (HTTP %d)', $info['checkUrl'], $botBlocked[$url], $result);
                     continue;
                 }
                 $message = (string) $result;
@@ -236,9 +241,12 @@ class CheckLinksCommand extends Command
      * with a >=400 status are retried with a GET, since some servers reject HEAD entirely.
      *
      * @param array<string, string> $checkUrls Original url => checkUrl to request
+     * @param array<string, string> $botBlocked Out param: original url => provider name
+     *   ('Cloudflare', 'Akamai') for any response (HEAD or GET) that looked like a bot
+     *   challenge or WAF block page rather than a genuinely broken link
      * @return array<string, int|string> Original url => status code, or an error message
      */
-    private function checkUrls(array $checkUrls, float $timeout, int $concurrency, SymfonyStyle $io): array
+    private function checkUrls(array $checkUrls, float $timeout, int $concurrency, SymfonyStyle $io, array &$botBlocked): array
     {
         if (empty($checkUrls)) {
             return [];
@@ -246,7 +254,7 @@ class CheckLinksCommand extends Command
 
         $results = [];
         $getNeeded = [];
-        $this->sendBatch($checkUrls, 'HEAD', $timeout, $concurrency, function (string $url, int|string $result) use (&$results, &$getNeeded, $checkUrls, $io) {
+        $this->sendBatch($checkUrls, 'HEAD', $timeout, $concurrency, $botBlocked, function (string $url, int|string $result) use (&$results, &$getNeeded, $checkUrls, $io) {
             if (is_int($result) && $result >= 400) {
                 $getNeeded[$url] = $checkUrls[$url];
             } else {
@@ -256,7 +264,7 @@ class CheckLinksCommand extends Command
         });
 
         if (!empty($getNeeded)) {
-            $this->sendBatch($getNeeded, 'GET', $timeout, $concurrency, function (string $url, int|string $result) use (&$results, $io) {
+            $this->sendBatch($getNeeded, 'GET', $timeout, $concurrency, $botBlocked, function (string $url, int|string $result) use (&$results, $io) {
                 $results[$url] = $result;
                 $io->progressAdvance();
             });
@@ -266,14 +274,91 @@ class CheckLinksCommand extends Command
     }
 
     /**
+     * Recognizes responses that are actually a bot-challenge or WAF block page from a CDN/WAF
+     * provider fronting the site, rather than evidence the link itself is dead - a plain HTTP
+     * client can't solve these challenges, so a 403/503 from one isn't a broken link.
+     *
+     * @return string|null The provider name ('Cloudflare', 'Akamai') if blocked, null otherwise
+     */
+    private function detectBotBlock(ResponseInterface $response): ?string
+    {
+        if ($this->isCloudflareBlock($response)) {
+            return 'Cloudflare';
+        }
+
+        if ($this->isAkamaiBlock($response)) {
+            return 'Akamai';
+        }
+
+        return null;
+    }
+
+    private function isCloudflareBlock(ResponseInterface $response): bool
+    {
+        $status = $response->getStatusCode();
+        if ($status !== 403 && $status !== 503) {
+            return false;
+        }
+
+        if (!str_contains(strtolower($response->getHeaderLine('server')), 'cloudflare')) {
+            return false;
+        }
+
+        // Set by Cloudflare whenever it intercepted the request with a challenge or block action
+        if ($response->hasHeader('cf-mitigated')) {
+            return true;
+        }
+
+        // HEAD responses have no body to inspect; fall back to the GET retry for this check
+        $body = $this->decodedBody($response);
+        return str_contains($body, 'Just a moment')
+            || str_contains($body, 'Checking your browser before accessing')
+            || str_contains($body, 'Attention Required! | Cloudflare')
+            || str_contains($body, 'cf-chl-bypass')
+            || str_contains($body, 'cf_chl_opt');
+    }
+
+    private function isAkamaiBlock(ResponseInterface $response): bool
+    {
+        $status = $response->getStatusCode();
+        if ($status !== 403 && $status !== 503) {
+            return false;
+        }
+
+        if (!str_contains(strtolower($response->getHeaderLine('server')), 'akamai')) {
+            return false;
+        }
+
+        // HEAD responses have no body to inspect; fall back to the GET retry for this check.
+        // Akamai's default deny/bot-challenge page ("Access Denied ... Reference #...") is
+        // served from its own error-page domain rather than via a dedicated response header.
+        $body = $this->decodedBody($response);
+        return str_contains($body, 'Reference #')
+            || str_contains($body, 'errors.edgesuite.net')
+            || str_contains($body, 'Pardon Our Interruption');
+    }
+
+    /**
+     * Some block/challenge pages (e.g. Akamai's default deny page) HTML-encode their body
+     * text (e.g. "Reference&#32;&#35;18..." instead of "Reference #18..."), so a literal
+     * substring match against the raw body would never fire.
+     */
+    private function decodedBody(ResponseInterface $response): string
+    {
+        return html_entity_decode((string) $response->getBody(), ENT_QUOTES | ENT_HTML5);
+    }
+
+    /**
      * Sends the given requests concurrently, capped at $concurrency in flight at a time,
      * invoking $onResult as each individual request completes so callers can report
      * progress in real time rather than waiting for the whole batch to finish.
      *
      * @param array<string, string> $checkUrls Original url => checkUrl to request
+     * @param array<string, string> $botBlocked Out param: original url => provider name, set
+     *   for responses that look like a bot challenge or WAF block page
      * @param callable(string, int|string): void $onResult
      */
-    private function sendBatch(array $checkUrls, string $method, float $timeout, int $concurrency, callable $onResult): void
+    private function sendBatch(array $checkUrls, string $method, float $timeout, int $concurrency, array &$botBlocked, callable $onResult): void
     {
         // Guzzle's PSR-7 Response rejects any status code outside 100-599, so a server
         // replying with a non-standard code (e.g. 600) never reaches 'fulfilled' as an int -
@@ -302,7 +387,11 @@ class CheckLinksCommand extends Command
                     }
                 },
             ],
-            'fulfilled' => function (ResponseInterface $response, string $url) use ($onResult) {
+            'fulfilled' => function (ResponseInterface $response, string $url) use ($onResult, &$botBlocked) {
+                $provider = $this->detectBotBlock($response);
+                if ($provider !== null) {
+                    $botBlocked[$url] = $provider;
+                }
                 $onResult($url, $response->getStatusCode());
             },
             'rejected' => function (\Throwable $reason, string $url) use ($onResult, $checkUrls, &$rawStatusCodes) {
