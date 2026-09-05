@@ -80,8 +80,8 @@ export default class extends Controller {
         let p = this.displayTarget.querySelector('.annotation');
         if (data.annotation) {
             if (!p) {
-                p = document.createElement('p');
-                p.className = 'shadow-none p-3 bg-light rounded annotation';
+                p = document.createElement('div');
+                p.className = 'shadow-none p-3 bg-body-secondary rounded annotation';
                 this.displayTarget.prepend(p);
             }
             p.innerHTML = data.annotation;

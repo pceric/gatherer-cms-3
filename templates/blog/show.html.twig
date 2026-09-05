@@ -29,7 +29,7 @@
             {% if is_granted('ROLE_EDITOR') %}
                 {{ include('blog/_annotation_editor.html.twig', {annotation: blog.annotation, url: path('admin_reader_annotation', {id: blog.id})}) }}
             {% elseif blog.annotation is not empty %}
-                <p class="shadow-none p-3 bg-body-secondary rounded annotation">{{ blog.annotation }}</p>
+                <div class="shadow-none p-3 bg-body-secondary rounded annotation">{{ blog.annotation }}</div>
             {% endif %}
         {% endif %}
         {% if pager.haveToPaginate() %}

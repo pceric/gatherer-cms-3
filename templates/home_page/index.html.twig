@@ -66,7 +66,7 @@
                     {% if is_granted('ROLE_EDITOR') %}
                         {{ include('blog/_annotation_editor.html.twig', {annotation: floop.annotation, url: path('admin_reader_annotation', {id: floop.id})}) }}
                     {% elseif floop.annotation is not empty %}
-                        <p class="shadow-none p-3 bg-body-secondary rounded annotation">{{ floop.annotation|raw }}</p>
+                        <div class="shadow-none p-3 bg-body-secondary rounded annotation">{{ floop.annotation|raw }}</div>
                     {% endif %}
                 {% else %}
                     {{ floop.content|summarize|raw }}

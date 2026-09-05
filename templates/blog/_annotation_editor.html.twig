@@ -1,7 +1,7 @@
 <div data-controller="annotation" data-annotation-url-value="{{ url }}">
     <div data-annotation-target="display">
         {% if annotation is not empty %}
-        <p class="shadow-none p-3 bg-body-secondary rounded annotation">{{ annotation|raw }}</p>
+        <div class="shadow-none p-3 bg-body-secondary rounded annotation">{{ annotation|raw }}</div>
         {% endif %}
         <a href="#" class="text-muted small" data-action="click->annotation#edit">
             <i class="bi bi-pencil-square"></i>
