@@ -94,3 +94,16 @@ parameters:
         - enabled:
             label: Enabled
             type: CheckboxType
+    scripts:
+      label: Custom Scripts
+      fields:
+        - header:
+            label: Header Scripts
+            type: TextareaType
+            help: Injected into the page after all existing header scripts. Limited to 4KiB.
+            max_length: 4096
+        - footer:
+            label: Footer Scripts
+            type: TextareaType
+            help: Injected into the page after all existing footer scripts. Limited to 4KiB.
+            max_length: 4096

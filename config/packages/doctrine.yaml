@@ -7,6 +7,20 @@ doctrine:
         #server_version: '16'
 
         profiling_collect_backtrace: '%kernel.debug%'
+        # Force the connection collation to match the schema (utf8mb4_general_ci).
+        #
+        # Why: MariaDB 11.x defaults new connections to utf8mb4_uca1400_ai_ci.
+        # The 'blog'/'reader' literals in the v_archive view kept the collation
+        # in effect when the view was created (utf8mb4_general_ci), so a query
+        # like "WHERE type = ?" mixes two collations and fails with
+        # SQLSTATE 1267 "Illegal mix of collations".
+        #
+        # Portability: 1002 is PDO::MYSQL_ATTR_INIT_COMMAND (written as an int
+        # because the constant is deprecated in PHP 8.4+). Driver attribute
+        # numbers mean different things per driver, so remove this block if
+        # switching to Postgres or SQLite.
+        options:
+            1002: 'SET NAMES utf8mb4 COLLATE utf8mb4_general_ci' # PDO::MYSQL_ATTR_INIT_COMMAND
     orm:
         auto_generate_proxy_classes: true
         enable_lazy_ghost_objects: true

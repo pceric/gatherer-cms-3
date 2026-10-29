@@ -9,6 +9,7 @@ namespace App\Form\Type;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 class JsonType extends AbstractType
@@ -30,6 +31,10 @@ class JsonType extends AbstractType
                 $fieldOptions = ['label' => $v['label'], 'help' => isset($v['help']) ? $this->translator->trans($v['help']) : '', 'required' => false];
                 if ($v['type'] === 'UrlType') {
                     $fieldOptions['default_protocol'] = null;
+                }
+                if (isset($v['max_length'])) {
+                    $fieldOptions['attr'] = ['maxlength' => $v['max_length']];
+                    $fieldOptions['constraints'] = [new Length(['max' => $v['max_length']])];
                 }
                 $appType = "App\\Form\\Type\\" . $v['type'];
                 $type = class_exists($appType)

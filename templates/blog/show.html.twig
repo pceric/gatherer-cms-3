@@ -29,7 +29,7 @@
             {% if is_granted('ROLE_EDITOR') %}
                 {{ include('blog/_annotation_editor.html.twig', {annotation: blog.annotation, url: path('admin_reader_annotation', {id: blog.id})}) }}
             {% elseif blog.annotation is not empty %}
-                <div class="shadow-none p-3 bg-body-secondary rounded annotation">{{ blog.annotation }}</div>
+                <div class="shadow-none p-3 bg-body-secondary rounded annotation">{{ blog.annotation|raw }}</div>
             {% endif %}
         {% endif %}
         {% if pager.haveToPaginate() %}
@@ -50,7 +50,7 @@
             </div>
         </div>
     </article>
-    {% if config.get('enabled', 'disqus') and config.get('domain', 'disqus') is not empty %}
+    {% if blog.source is not defined and config.get('enabled', 'disqus') and config.get('shortname', 'disqus') is not empty %}
     <div id="disqus_thread"></div>
     <script>
         var disqus_config = function () {
@@ -59,7 +59,7 @@
         };
         (function() { // DON'T EDIT BELOW THIS LINE
             var d = document, s = d.createElement('script');
-            s.src = 'https://{{ config.get('domain', 'disqus') }}.disqus.com/embed.js';
+            s.src = 'https://{{ config.get('shortname', 'disqus') }}.disqus.com/embed.js';
             s.setAttribute('data-timestamp', +new Date());
             (d.head || d.body).appendChild(s);
         })();
@@ -69,7 +69,7 @@
 {% endblock %}
 
 {% block javascripts %}
-    {% if config.get('enabled', 'disqus') and config.get('domain', 'disqus') is not empty %}
-    <script id="dsq-count-scr" src="//{{ config.get('domain', 'disqus') }}.disqus.com/count.js" async></script>
+    {% if blog.source is not defined and config.get('enabled', 'disqus') and config.get('shortname', 'disqus') is not empty %}
+    <script id="dsq-count-scr" src="//{{ config.get('shortname', 'disqus') }}.disqus.com/count.js" async></script>
     {% endif %}
 {% endblock %}

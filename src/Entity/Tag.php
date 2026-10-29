@@ -31,11 +31,11 @@ class Tag
     private ?string $name;
 
     #[ORM\ManyToMany(targetEntity: Blog::class, mappedBy: 'tags', fetch: 'EXTRA_LAZY')]
-    #[OrderBy(['pubdate' => 'DESC'])]
+    #[OrderBy(['pubdate' => \SortDirection::Descending])]
     private Collection $blogs;
 
     #[ORM\ManyToMany(targetEntity: Reader::class, mappedBy: 'tags', fetch: 'EXTRA_LAZY')]
-    #[OrderBy(['pubdate' => 'DESC'])]
+    #[OrderBy(['pubdate' => \SortDirection::Descending])]
     private Collection $readers;
 
     public function __construct()

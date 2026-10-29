@@ -15,6 +15,7 @@
     <script>(function(){var t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-bs-theme',t)})();</script>
     {% block importmap %}{{ importmap('app') }}{% endblock %}
     {% block stylesheets %}{% endblock %}
+    {{ config.get('header', 'scripts')|raw }}
 </head>
 <body data-controller="theme local-time">
 {{ include('_flashes.html.twig') }}
@@ -122,5 +123,6 @@
 <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
 <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
 {% endif %}
+{{ config.get('footer', 'scripts')|raw }}
 </body>
 </html>

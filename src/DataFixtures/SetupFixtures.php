@@ -50,7 +50,7 @@ class SetupFixtures extends Fixture
         ],
         'disqus' => [
             'enabled' => False,
-            'domain' => '',
+            'shortname' => '',
         ]
     ];
 
