@@ -8,3 +8,8 @@ when@dev:
     symfonycasts_sass:
         sass_options:
             quiet: false
+
+when@prod:
+    symfonycasts_sass:
+        sass_options:
+            source_map: false
